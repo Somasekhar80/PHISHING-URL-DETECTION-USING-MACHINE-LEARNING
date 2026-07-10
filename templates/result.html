@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body{
+            background:#121212;
+            color:white;
+            font-family:Arial, sans-serif;
+            margin:0;
+            padding:0;
+        }
+
+        .container{
+            width:85%;
+            margin:auto;
+            margin-top:30px;
+            background:#1e1e1e;
+            padding:30px;
+            border-radius:15px;
+            box-shadow:0 0 20px rgba(0,191,255,0.2);
+        }
+
+        h2,h3,h4{
+            text-align:center;
+            color:#00bfff;
+        }
+
+        p{
+            font-size:18px;
+        }
+
+        .progress{
+            width:100%;
+            height:30px;
+            background:#333;
+            border-radius:20px;
+            overflow:hidden;
+        }
+
+        .progress-bar{
+            height:100%;
+            line-height:30px;
+            color:white;
+            font-weight:bold;
+            text-align:center;
+        }
+
+        button{
+            background:#00bfff;
+            color:white;
+            border:none;
+            padding:12px 20px;
+            border-radius:8px;
+            cursor:pointer;
+            margin:8px;
+            font-size:15px;
+        }
+
+        button:hover{
+            background:#0099cc;
+        }
+
+        .preview-image{
+            width:100%;
+            border-radius:10px;
+            border:1px solid #444;
+            margin-top:15px;
+        }
+
+        .info-card{
+            background:#222;
+            padding:20px;
+            border-radius:10px;
+            margin-top:20px;
+            text-align:left;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
+        }
+
+        th{
+            background:#00bfff;
+            color:white;
+            padding:12px;
+        }
+
+        td{
+            border:1px solid #444;
+            padding:10px;
+            text-align:center;
+            word-break:break-word;
+        }
+
+        hr{
+            border:1px solid #333;
+            margin-top:30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Prediction Result</h2>
+    <h3>{{ result }}</h3>
+
+    <p><b>URL:</b> {{ url }}</p>
+
+    <h4>Legitimate Confidence: {{ legitimate }}%</h4>
+    <div class="progress">
+        <div class="progress-bar" style="width:{{ legitimate }}%; background:green;">
+            {{ legitimate }}%
+        </div>
+    </div>
+
+    <br>
+
+    <h4>Phishing Confidence: {{ phishing }}%</h4>
+    <div class="progress">
+        <div class="progress-bar" style="width:{{ phishing }}%; background:red;">
+            {{ phishing }}%
+        </div>
+    </div>
+
+    <br>
+
+    <center>
+        <button onclick="toggleGraph()">View Analysis Graph</button>
+        <button onclick="togglePreview()">Preview Website</button>
+        <button onclick="toggleRisk()">Risk Score</button>
+        <button onclick="toggleFeatures()">Feature Breakdown</button>
+        <button onclick="togglePie()">Pie Chart</button>
+        <button onclick="toggleBlacklist()">Blacklist Check</button>
+        <button onclick="downloadReport()">Export PDF</button>
+    </center>
+
+    <div id="graphDiv" style="display:none; margin-top:30px;">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div id="pieDiv" style="display:none; margin-top:30px;">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <div id="riskDiv" style="display:none; margin-top:20px;">
+        <h3>Risk Score: {{ risk_score }}/100</h3>
+    </div>
+
+    <div id="featuresDiv" style="display:none;">
+        <div class="info-card">
+            <h3>URL Feature Breakdown</h3>
+            {% for key, value in breakdown.items() %}
+                <p><b>{{ key }}:</b> {{ value }}</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="blacklistDiv" style="display:none;">
+        <h3>
+            {% if blacklisted %}
+                ⚠️ URL Found in Blacklist
+            {% else %}
+                ✅ URL Not Found in Blacklist
+            {% endif %}
+        </h3>
+    </div>
+
+    <div id="previewDiv" style="display:none; margin-top:30px;">
+        <h3>Website Screenshot</h3>
+
+        {% if preview_path %}
+            <img class="preview-image" src="{{ preview_path }}" alt="Website Screenshot">
+        {% else %}
+            <h3>Screenshot Not Available</h3>
+        {% endif %}
+
+        <div class="info-card">
+            <h3>Website Information</h3>
+            <p><b>URL:</b> {{ url }}</p>
+            <p><b>IP Address:</b> {{ ip_address }}</p>
+            <p><b>SSL Certificate:</b> {{ certificate }}</p>
+            <p><b>Hosting Provider:</b> {{ hosting_provider }}</p>
+            <p><b>Location:</b> {{ location }}</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Last 5 Searches</h3>
+    <table>
+        <tr>
+            <th>URL</th>
+            <th>Result</th>
+            <th>Legitimate %</th>
+            <th>Phishing %</th>
+        </tr>
+
+        {% for item in history %}
+        <tr>
+            <td>{{ item.url }}</td>
+            <td>{{ item.result }}</td>
+            <td>{{ item.legitimate }}</td>
+            <td>{{ item.phishing }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+<script>
+function toggle(id){
+    let div = document.getElementById(id);
+    div.style.display = div.style.display === "none" ? "block" : "none";
+}
+
+function toggleGraph(){ toggle("graphDiv"); }
+function togglePreview(){ toggle("previewDiv"); }
+function toggleRisk(){ toggle("riskDiv"); }
+function toggleFeatures(){ toggle("featuresDiv"); }
+function togglePie(){ toggle("pieDiv"); }
+function toggleBlacklist(){ toggle("blacklistDiv"); }
+
+function downloadReport(){
+    window.print();
+}
+
+new Chart(document.getElementById("myChart"), {
+    type:'bar',
+    data:{
+        labels:['Legitimate','Phishing'],
+        datasets:[{
+            label:'Confidence (%)',
+            data:[{{ legitimate }}, {{ phishing }}]
+        }]
+    },
+    options:{
+        responsive:true,
+        scales:{
+            y:{
+                beginAtZero:true,
+                max:100
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById("pieChart"), {
+    type:'pie',
+    data:{
+        labels:['Legitimate','Phishing'],
+        datasets:[{
+            data:[{{ legitimate }}, {{ phishing }}]
+        }]
+    }
+});
+</script>
+
+</body>
+</html>
