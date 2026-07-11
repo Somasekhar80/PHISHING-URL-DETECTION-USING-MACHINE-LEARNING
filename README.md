@@ -188,26 +188,6 @@ model/vectorizer.pkl
 
 ---
 
-## 📸 Screenshots
-
-### Home Page
-
-Add your screenshot here.
-
----
-
-### Prediction Result
-
-Add your screenshot here.
-
----
-
-### Website Preview
-
-Add your screenshot here.
-
----
-
 ## 🚀 Future Enhancements
 
 - Browser Extension
